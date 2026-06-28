@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-ink: 43 40 36;
+    --color-muted: 117 110 101;
+    --color-paper: 246 241 232;
+    --color-surface: 255 252 246;
+    --color-leather: 119 80 53;
+    --color-gold: 169 130 69;
+    --color-line: 216 201 176;
+    --color-success: 97 125 97;
+    --color-danger: 169 88 76;
+    --radius-control: 0.75rem;
+    --radius-card: 1rem;
+    --space-page: clamp(1rem, 3vw, 2rem);
+    color-scheme: light;
+  }
+
+  :root[data-theme='ink'] {
+    --color-ink: 246 241 232;
+    --color-muted: 194 181 160;
+    --color-paper: 34 29 24;
+    --color-surface: 45 38 31;
+    --color-leather: 206 166 112;
+    --color-gold: 191 151 82;
+    --color-line: 91 75 58;
+    --color-success: 145 176 132;
+    --color-danger: 221 132 116;
+    color-scheme: dark;
+  }
+
+  :root[data-density='compact'] {
+    --space-page: clamp(0.75rem, 2vw, 1.5rem);
+  }
+
+  * {
+    @apply border-line;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  html[data-reduce-motion='true'] {
+    scroll-behavior: auto;
+  }
+
+  body {
+    @apply m-0 bg-paper font-sans text-ink antialiased;
+    min-width: 320px;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  ::selection {
+    background: rgb(var(--color-gold) / 0.24);
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-gold ring-offset-2 ring-offset-paper;
+  }
+}
+
+@layer components {
+  .paper-grid {
+    background-image:
+      linear-gradient(rgba(139, 94, 52, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 94, 52, 0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .page-shell {
+    @apply mx-auto w-full max-w-[1440px];
+    padding-left: var(--space-page);
+    padding-right: var(--space-page);
+  }
+
+  .scrollbar-thin {
+    scrollbar-color: #d9c9aa transparent;
+    scrollbar-width: thin;
+  }
+
+  .interactive-lift {
+    @apply transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-soft;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html[data-reduce-motion='true'] *,
+html[data-reduce-motion='true'] *::before,
+html[data-reduce-motion='true'] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 3px;
+    box-shadow: none !important;
+  }
+
+  .shadow-soft,
+  .shadow-lift {
+    box-shadow: none !important;
+  }
+}
