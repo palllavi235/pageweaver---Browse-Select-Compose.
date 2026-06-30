@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react'
 import { Document, Page, pdfjs, type DocumentProps } from 'react-pdf'
 import { ChevronLeft, ChevronRight, Maximize2, Minus, Plus, Rows3, SearchCheck } from 'lucide-react'
-import { Button, IconButton, Input, Skeleton, Tooltip } from '@/components/ui'
+import { Button, IconButton, Input, Skeleton } from '@/components/ui'
 import { useElementSize } from '@/hooks/use-element-size'
 import { useViewerStore, type ViewerPaneId } from '@/store/use-viewer-store'
 import { PAGEWEAVER_PAGE_DRAG_MIME, type PageDragPayload } from '@/features/composer/types'
@@ -15,6 +15,9 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.m
 
 const PAGE_ASPECT_RATIO = 0.707
 const PAGE_GAP = 28
+const RENDER_PIXEL_RATIO = typeof window === 'undefined'
+  ? 2
+  : Math.min(2.5, Math.max(2, window.devicePixelRatio || 1))
 
 type PdfDocumentViewerProps = {
   data: ArrayBuffer
@@ -98,7 +101,9 @@ export function PdfDocumentViewer({ data, paneId = 'a', sourceFile, onDocumentRe
 
   const goToPage = (page: number) => {
     if (!pageCount) return
-    setCurrentPage(clampPage(page, pageCount), paneId)
+    const nextPage = clampPage(page, pageCount)
+    setCurrentPage(nextPage, paneId)
+    viewportRef.current?.scrollTo({ top: (nextPage - 1) * virtualItemHeight, behavior: 'smooth' })
   }
 
   const updateCurrentPageFromScroll = (nextScrollTop: number) => {
@@ -219,6 +224,7 @@ export function PdfDocumentViewer({ data, paneId = 'a', sourceFile, onDocumentRe
               <Page
                 canvasRef={page === currentPage ? previewCanvasRef : undefined}
                 className={cn('overflow-hidden shadow-lift', page === currentPage && 'ring-2 ring-gold/40')}
+                devicePixelRatio={RENDER_PIXEL_RATIO}
                 loading={<Skeleton className="aspect-[.707] w-[min(70vw,680px)]" />}
                 pageNumber={page}
                 renderAnnotationLayer
@@ -229,23 +235,19 @@ export function PdfDocumentViewer({ data, paneId = 'a', sourceFile, onDocumentRe
           ))}
         </div>
         <div className="sticky bottom-4 z-10 mx-auto flex w-fit flex-wrap items-center justify-center gap-1 rounded-xl border bg-surface/95 p-1.5 shadow-soft backdrop-blur">
-          <Tooltip label="Previous page">
-            <IconButton aria-label="Previous page" className="size-8" disabled={currentPage <= 1} onClick={() => goToPage(currentPage - 1)}>
-              <ChevronLeft className="size-4" />
-            </IconButton>
-          </Tooltip>
+          <IconButton aria-label="Previous page" className="size-8" disabled={currentPage <= 1} onClick={() => goToPage(currentPage - 1)}>
+            <ChevronLeft className="size-4" />
+          </IconButton>
           <span className="min-w-14 px-1 text-center text-xs font-semibold">{currentPage} / {pageCount}</span>
-          <Tooltip label="Next page">
-            <IconButton aria-label="Next page" className="size-8" disabled={currentPage >= pageCount} onClick={() => goToPage(currentPage + 1)}>
-              <ChevronRight className="size-4" />
-            </IconButton>
-          </Tooltip>
+          <IconButton aria-label="Next page" className="size-8" disabled={currentPage >= pageCount} onClick={() => goToPage(currentPage + 1)}>
+            <ChevronRight className="size-4" />
+          </IconButton>
           <span className="mx-1 h-5 w-px bg-line" />
-          <Tooltip label="Zoom out"><IconButton aria-label="Zoom out" className="size-8" onClick={() => setZoom(zoom - 0.1, paneId)}><Minus className="size-4" /></IconButton></Tooltip>
+          <IconButton aria-label="Zoom out" className="size-8" onClick={() => setZoom(zoom - 0.1, paneId)}><Minus className="size-4" /></IconButton>
           <span className="w-12 text-center text-xs font-semibold">{Math.round((fitMode === 'custom' ? zoom : 1) * 100)}%</span>
-          <Tooltip label="Zoom in"><IconButton aria-label="Zoom in" className="size-8" onClick={() => setZoom(zoom + 0.1, paneId)}><Plus className="size-4" /></IconButton></Tooltip>
-          <Tooltip label="Fit width"><IconButton aria-label="Fit width" className="size-8" onClick={() => setFitMode('width', paneId)}><Rows3 className="size-4" /></IconButton></Tooltip>
-          <Tooltip label="Fit page"><IconButton aria-label="Fit page" className="size-8" onClick={() => setFitMode('page', paneId)}><Maximize2 className="size-4" /></IconButton></Tooltip>
+          <IconButton aria-label="Zoom in" className="size-8" onClick={() => setZoom(zoom + 0.1, paneId)}><Plus className="size-4" /></IconButton>
+          <IconButton aria-label="Fit width" className="size-8" onClick={() => setFitMode('width', paneId)}><Rows3 className="size-4" /></IconButton>
+          <IconButton aria-label="Fit page" className="size-8" onClick={() => setFitMode('page', paneId)}><Maximize2 className="size-4" /></IconButton>
           <span className="mx-1 h-5 w-px bg-line" />
           <Button className="ml-1" disabled={!selectedPages.length} onClick={addSelection} size="sm">
             <Plus className="size-4" /> Add {selectedPages.length || ''} pages

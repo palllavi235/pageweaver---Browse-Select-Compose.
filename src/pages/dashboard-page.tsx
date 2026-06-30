@@ -1,10 +1,10 @@
-import { ArrowRight, Cloud, Copy, FilePlus2, FolderOpen, Pencil, Plus, Star, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowRight, Clock3, Cloud, Copy, FileCheck2, FilePlus2, FolderOpen, Pencil, Plus, ShieldCheck, Star, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { GoogleAuthButton } from '@/components/auth-button'
-import { DocumentPreview, PdfCard } from '@/components/pdf-card'
+import { DriveFileCard } from '@/components/drive-file-card'
+import { DocumentPreview } from '@/components/pdf-card'
 import { Badge, Button, Card, Dialog, Input, OverflowMenu, Progress } from '@/components/ui'
-import { pdfFiles } from '@/constants/mock-data'
 import { useAuthStore } from '@/store/use-auth-store'
 import { useLibraryStore } from '@/store/use-library-store'
 import { useWorkspaceStore, type PageWeaverWorkspace } from '@/store/use-workspace-store'
@@ -22,6 +22,7 @@ function relativeDay(value: number) {
 
 export function DashboardPage() {
   const session = useAuthStore((state) => state.session)
+  const userId = session?.user.id
   const workspaces = useWorkspaceStore((state) => state.workspaces)
   const createWorkspace = useWorkspaceStore((state) => state.createWorkspace)
   const switchWorkspace = useWorkspaceStore((state) => state.switchWorkspace)
@@ -29,12 +30,16 @@ export function DashboardPage() {
   const duplicateWorkspace = useWorkspaceStore((state) => state.duplicateWorkspace)
   const deleteWorkspace = useWorkspaceStore((state) => state.deleteWorkspace)
   const toggleWorkspaceFavorite = useWorkspaceStore((state) => state.toggleWorkspaceFavorite)
-  const timeline = useLibraryStore((state) => state.timeline)
+  const accounts = useLibraryStore((state) => state.accounts)
+  const generated = useLibraryStore((state) => state.generated)
+  const recordOpened = useLibraryStore((state) => state.recordOpened)
   const navigate = useNavigate()
   const [renameTarget, setRenameTarget] = useState<PageWeaverWorkspace | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<PageWeaverWorkspace | null>(null)
   const recentWorkspaces = [...workspaces].sort((a, b) => b.lastOpenedAt - a.lastOpenedAt).slice(0, 4)
+  const recentDriveFiles = useMemo(() => (userId ? accounts[userId]?.recent ?? [] : []), [accounts, userId])
+  const generatedCount = useMemo(() => (userId ? generated.filter((record) => record.userId === userId).length : 0), [generated, userId])
   const today = new Intl.DateTimeFormat(undefined, { dateStyle: 'full' }).format(new Date())
   const greeting = session?.user.name ? `Good morning, ${session.user.name}.` : 'Welcome to PageWeaver'
 
@@ -148,32 +153,54 @@ export function DashboardPage() {
         <div className="mb-4 flex items-end justify-between">
           <div>
             <h3 className="font-display text-2xl font-semibold">Recently opened</h3>
-            <p className="mt-1 text-xs text-muted">Continue selecting pages from your files</p>
+            <p className="mt-1 text-xs text-muted">Only PDFs opened by the current Google account appear here.</p>
           </div>
           <Link to="/app/drive" className="text-sm font-semibold text-leather">Browse all <ArrowRight className="ml-1 inline size-4" /></Link>
         </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-7 md:grid-cols-3 xl:grid-cols-4">
-          {pdfFiles.slice(0, 4).map((file) => <PdfCard key={file.id} file={file} />)}
-        </div>
+        {session && recentDriveFiles.length ? (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-7 md:grid-cols-3 xl:grid-cols-4">
+            {recentDriveFiles.slice(0, 4).map((file) => (
+              <DriveFileCard
+                file={file}
+                key={file.id}
+                onOpen={() => userId && recordOpened(userId, file)}
+              />
+            ))}
+          </div>
+        ) : (
+          <Card className="flex items-start gap-4 p-5">
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#eee3d2] text-leather">
+              <Clock3 className="size-5" />
+            </span>
+            <div>
+              <h4 className="font-semibold">{session ? 'No PDFs opened yet' : 'Connect to see your recent PDFs'}</h4>
+              <p className="mt-1 max-w-xl text-sm leading-6 text-muted">
+                {session
+                  ? 'Open a PDF from your Drive library and it will appear here for this account only.'
+                  : 'PageWeaver does not show document names from another account on the Overview page.'}
+              </p>
+            </div>
+          </Card>
+        )}
       </section>
 
       <section className="mt-10">
         <div className="mb-4">
-          <h3 className="font-display text-2xl font-semibold">Workspace timeline</h3>
+          <h3 className="font-display text-2xl font-semibold">Private activity</h3>
         </div>
-        <Card className="divide-y overflow-hidden">
-          {timeline.slice(0, 6).length ? timeline.slice(0, 6).map((item) => (
-            <div className="flex items-center gap-3 p-4" key={item.id}>
-              <span className="size-2.5 rounded-full bg-gold" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{item.label}</p>
-                <p className="text-xs text-muted">{item.detail}</p>
-              </div>
-              <span className="text-[11px] text-muted">{relativeDay(item.at)}</span>
-            </div>
-          )) : (
-            <p className="p-4 text-sm text-muted">Open PDFs, edit workspaces, or generate documents to build your timeline.</p>
-          )}
+        <Card className="grid gap-4 p-5 sm:grid-cols-3">
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-xl bg-[#e1e8dc] text-success"><ShieldCheck className="size-5" /></span>
+            <div><p className="text-sm font-semibold">Account scoped</p><p className="text-xs text-muted">No cross-user recents</p></div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-xl bg-[#eee3d2] text-leather"><Clock3 className="size-5" /></span>
+            <div><p className="text-sm font-semibold">{recentDriveFiles.length} recent PDFs</p><p className="text-xs text-muted">For this account</p></div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-xl bg-[#f3e7cb] text-gold"><FileCheck2 className="size-5" /></span>
+            <div><p className="text-sm font-semibold">{generatedCount} generated PDFs</p><p className="text-xs text-muted">For this account</p></div>
+          </div>
         </Card>
       </section>
 

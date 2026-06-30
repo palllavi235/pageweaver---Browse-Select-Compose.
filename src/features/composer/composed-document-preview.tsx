@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type UIEvent } from 'react'
 import { Document, Page, pdfjs, type DocumentProps } from 'react-pdf'
 import { ArrowLeft, ArrowRight, FileText, Maximize2, Minus, Plus, Rows3 } from 'lucide-react'
-import { Card, EmptyState, IconButton, Progress, Skeleton, Tooltip } from '@/components/ui'
+import { Card, EmptyState, IconButton, Progress, Skeleton } from '@/components/ui'
 import { useElementSize } from '@/hooks/use-element-size'
 import { useComposedDocumentPreview } from './use-composed-document-preview'
 import type { WorkspacePageGroup } from './types'
@@ -17,6 +17,9 @@ type ComposedDocumentPreviewProps = {
 }
 
 const OVERSCAN = 2
+const RENDER_PIXEL_RATIO = typeof window === 'undefined'
+  ? 2
+  : Math.min(2.5, Math.max(2, window.devicePixelRatio || 1))
 
 export function ComposedDocumentPreview({ groups, updatedAt }: ComposedDocumentPreviewProps) {
   const preview = useComposedDocumentPreview(groups, updatedAt)
@@ -92,39 +95,27 @@ export function ComposedDocumentPreview({ groups, updatedAt }: ComposedDocumentP
           </p>
         </div>
         <div className="flex items-center gap-1 rounded-xl border bg-paper/60 p-1">
-          <Tooltip label="Previous page">
-            <IconButton aria-label="Previous preview page" className="size-8" disabled={currentPage <= 1} onClick={() => goToPage(currentPage - 1)}>
-              <ArrowLeft className="size-4" />
-            </IconButton>
-          </Tooltip>
-          <span className="min-w-16 px-2 text-center text-xs font-semibold">{currentPage} / {pageCount || '—'}</span>
-          <Tooltip label="Next page">
-            <IconButton aria-label="Next preview page" className="size-8" disabled={!pageCount || currentPage >= pageCount} onClick={() => goToPage(currentPage + 1)}>
-              <ArrowRight className="size-4" />
-            </IconButton>
-          </Tooltip>
+          <IconButton aria-label="Previous preview page" className="size-8" disabled={currentPage <= 1} onClick={() => goToPage(currentPage - 1)}>
+            <ArrowLeft className="size-4" />
+          </IconButton>
+          <span className="min-w-16 px-2 text-center text-xs font-semibold">{currentPage} / {pageCount || '-'}</span>
+          <IconButton aria-label="Next preview page" className="size-8" disabled={!pageCount || currentPage >= pageCount} onClick={() => goToPage(currentPage + 1)}>
+            <ArrowRight className="size-4" />
+          </IconButton>
           <span className="mx-1 h-5 w-px bg-line" />
-          <Tooltip label="Zoom out">
-            <IconButton aria-label="Zoom out preview" className="size-8" onClick={() => { setZoom((value) => Math.max(0.45, value - 0.1)); setFitMode('custom') }}>
-              <Minus className="size-4" />
-            </IconButton>
-          </Tooltip>
+          <IconButton aria-label="Zoom out preview" className="size-8" onClick={() => { setZoom((value) => Math.max(0.45, value - 0.1)); setFitMode('custom') }}>
+            <Minus className="size-4" />
+          </IconButton>
           <span className="w-12 text-center text-xs font-semibold">{Math.round((fitMode === 'custom' ? zoom : 1) * 100)}%</span>
-          <Tooltip label="Zoom in">
-            <IconButton aria-label="Zoom in preview" className="size-8" onClick={() => { setZoom((value) => Math.min(2.5, value + 0.1)); setFitMode('custom') }}>
-              <Plus className="size-4" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip label="Fit width">
-            <IconButton aria-label="Fit preview width" className="size-8" onClick={() => setFitMode('width')}>
-              <Rows3 className="size-4" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip label="Fit page">
-            <IconButton aria-label="Fit preview page" className="size-8" onClick={() => setFitMode('page')}>
-              <Maximize2 className="size-4" />
-            </IconButton>
-          </Tooltip>
+          <IconButton aria-label="Zoom in preview" className="size-8" onClick={() => { setZoom((value) => Math.min(2.5, value + 0.1)); setFitMode('custom') }}>
+            <Plus className="size-4" />
+          </IconButton>
+          <IconButton aria-label="Fit preview width" className="size-8" onClick={() => setFitMode('width')}>
+            <Rows3 className="size-4" />
+          </IconButton>
+          <IconButton aria-label="Fit preview page" className="size-8" onClick={() => setFitMode('page')}>
+            <Maximize2 className="size-4" />
+          </IconButton>
         </div>
       </div>
 
@@ -141,7 +132,7 @@ export function ComposedDocumentPreview({ groups, updatedAt }: ComposedDocumentP
           <div className="w-full max-w-sm text-center">
             <Skeleton className="mx-auto aspect-[.707] w-52" />
             <p className="mt-5 font-display text-xl font-semibold">Rendering live preview</p>
-            <p className="mt-2 text-sm text-muted">{preview.message || 'Preparing source documents…'}</p>
+            <p className="mt-2 text-sm text-muted">{preview.message || 'Preparing source documents...'}</p>
             <Progress className="mt-5" value={preview.progress} />
           </div>
         </div>
@@ -165,6 +156,7 @@ export function ComposedDocumentPreview({ groups, updatedAt }: ComposedDocumentP
                     <div>
                       <Page
                         className="overflow-hidden bg-surface shadow-lift"
+                        devicePixelRatio={RENDER_PIXEL_RATIO}
                         loading={<div style={{ width: pageWidth }}><Skeleton className="aspect-[.707] w-full" /></div>}
                         pageNumber={page}
                         renderAnnotationLayer

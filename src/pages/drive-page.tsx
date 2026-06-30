@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Star,
 } from 'lucide-react'
+import { useMemo } from 'react'
 import { GoogleAuthButton } from '@/components/auth-button'
 import { DriveFileCard } from '@/components/drive-file-card'
 import {
@@ -62,8 +63,12 @@ function DriveGridSkeleton() {
   )
 }
 
-function GeneratedGrid() {
-  const generated = useLibraryStore((state) => state.generated)
+function GeneratedGrid({ userId }: { userId?: string }) {
+  const allGenerated = useLibraryStore((state) => state.generated)
+  const generated = useMemo(
+    () => (userId ? allGenerated.filter((record) => record.userId === userId) : []),
+    [allGenerated, userId],
+  )
   const currentResult = useGenerationStore((state) => state.result)
 
   if (!generated.length) {
@@ -290,7 +295,7 @@ export function DrivePage() {
               )}
             </div>
           )}
-          {view === 'generated' && <div className="mt-7"><GeneratedGrid /></div>}
+          {view === 'generated' && <div className="mt-7"><GeneratedGrid userId={userId} /></div>}
         </>
       )}
     </div>

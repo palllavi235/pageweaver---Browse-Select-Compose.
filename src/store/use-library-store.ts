@@ -5,6 +5,7 @@ const STORAGE_KEY = 'pageweaver:library:v1'
 
 export type GeneratedDocumentRecord = {
   id: string
+  userId?: string
   filename: string
   pageCount: number
   bytes: number

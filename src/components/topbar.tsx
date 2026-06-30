@@ -1,6 +1,6 @@
-import { Bell, Files, Menu } from 'lucide-react'
+import { Files, Menu } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
-import { IconButton, Search, Tooltip } from './ui'
+import { IconButton, Search } from './ui'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 
 const pageTitles: Record<string, string> = {
@@ -25,7 +25,6 @@ export function Topbar() {
       <IconButton aria-label="Open navigation" className="lg:hidden" onClick={() => setSidebarOpen(true)}><Menu className="size-5" /></IconButton>
       <h1 className="hidden font-display text-xl font-semibold sm:block">{title}</h1>
       <Search className="ml-auto w-full max-w-sm" placeholder="Search your workspace…" />
-      <Tooltip label="Notifications"><IconButton aria-label="Notifications" className="hidden sm:inline-flex"><Bell className="size-5" /></IconButton></Tooltip>
       <button onClick={toggleComposer} className="relative inline-flex h-10 items-center gap-2 rounded-xl border bg-surface px-3 text-sm font-semibold shadow-sm transition hover:bg-[#f5eee2]">
         <Files className="size-4 text-leather" /><span className="hidden md:inline">Current document</span>
         <span className="grid size-5 place-items-center rounded-full bg-leather text-[10px] text-white">{pageCount}</span>

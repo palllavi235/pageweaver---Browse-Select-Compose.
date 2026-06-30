@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { GoogleAuthButton } from '@/components/auth-button'
-import { Badge, Button, Card, Input, Tabs, useToast } from '@/components/ui'
+import { Badge, Button, Card, Dialog, Input, Tabs, useToast } from '@/components/ui'
 import { clearPdfCache, getPdfCacheStats } from '@/features/pdf/pdf-cache-service'
 import { useAuthStore } from '@/store/use-auth-store'
 import { useGenerationStore } from '@/store/use-generation-store'
@@ -62,6 +62,7 @@ function PreferenceButton({
 export function SettingsPage() {
   const [tab, setTab] = useState('Account')
   const [cacheVersion, setCacheVersion] = useState(0)
+  const [confirmSignOut, setConfirmSignOut] = useState(false)
   const showToast = useToast()
   const session = useAuthStore((state) => state.session)
   const signOut = useAuthStore((state) => state.signOut)
@@ -99,6 +100,7 @@ export function SettingsPage() {
 
   const handleSignOut = async () => {
     await signOut()
+    setConfirmSignOut(false)
     showToast('Signed out of Google')
   }
 
@@ -162,7 +164,7 @@ export function SettingsPage() {
                 <p className="rounded-2xl border bg-paper/60 p-4 text-sm text-muted">
                   Connected as <span className="font-medium text-ink">{session.user.email}</span>
                 </p>
-                <Button onClick={() => void handleSignOut()} variant="secondary"><LogOut className="size-4" /> Sign out</Button>
+                <Button onClick={() => setConfirmSignOut(true)} variant="secondary"><LogOut className="size-4" /> Sign out</Button>
               </div>
             ) : (
               <div className="mt-6"><GoogleAuthButton /></div>
@@ -308,6 +310,15 @@ export function SettingsPage() {
           </div>
         </div>
       )}
+      <Dialog open={confirmSignOut} onClose={() => setConfirmSignOut(false)} title="Sign out?">
+        <p className="text-sm leading-6 text-muted">
+          PageWeaver will disconnect Google Drive for this browser. Local workspace metadata remains on this device.
+        </p>
+        <div className="mt-6 flex justify-end gap-2">
+          <Button onClick={() => setConfirmSignOut(false)} variant="secondary">Cancel</Button>
+          <Button onClick={() => void handleSignOut()} variant="danger"><LogOut className="size-4" /> Sign out</Button>
+        </div>
+      </Dialog>
     </div>
   )
 }

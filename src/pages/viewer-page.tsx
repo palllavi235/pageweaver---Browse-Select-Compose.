@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { GoogleAuthButton } from '@/components/auth-button'
-import { Badge, Button, EmptyState, ErrorState, IconButton, Progress, Tooltip, useToast } from '@/components/ui'
+import { Badge, Button, EmptyState, ErrorState, IconButton, Progress, useToast } from '@/components/ui'
 import { getDrivePdfMetadata, type DrivePdfFile } from '@/features/drive/drive-service'
 import { PdfDocumentViewer } from '@/features/pdf/pdf-document-viewer'
 import { usePdfBuffer } from '@/features/pdf/use-pdf-buffer'
@@ -96,17 +96,13 @@ function ViewerPane({
           <p className="text-[11px] text-muted">{file ? formatBytes(file.size) : fileId ? 'Google Drive' : 'Choose this pane, then open a PDF from Drive'}</p>
         </div>
         <Badge tone={pane.selectedPages.length ? 'gold' : 'neutral'}>{pane.selectedPages.length} selected</Badge>
-        <Tooltip label="Download source">
-          <IconButton aria-label={`Download Viewer ${paneId.toUpperCase()} source PDF`} disabled={!pdf.data} onClick={downloadSource}>
-            <Download className="size-4" />
-          </IconButton>
-        </Tooltip>
+        <IconButton aria-label={`Download Viewer ${paneId.toUpperCase()} source PDF`} disabled={!pdf.data} onClick={downloadSource}>
+          <Download className="size-4" />
+        </IconButton>
         {paneId === 'b' && (
-          <Tooltip label="Close Viewer B">
-            <IconButton aria-label="Close Viewer B" onClick={() => closePane('b')}>
-              <X className="size-4" />
-            </IconButton>
-          </Tooltip>
+          <IconButton aria-label="Close Viewer B" onClick={() => closePane('b')}>
+            <X className="size-4" />
+          </IconButton>
         )}
       </div>
 

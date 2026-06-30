@@ -16,6 +16,7 @@ import {
   useRef,
   useState,
   type ButtonHTMLAttributes,
+  type CSSProperties,
   type HTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
@@ -126,7 +127,63 @@ export function Dropdown({ label, items, onChange }: { label: string; items: str
 }
 
 export function Tooltip({ label, children }: { label: string; children: ReactNode }) {
-  return <span className="group relative inline-flex">{children}<span role="tooltip" className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-xs text-white opacity-0 shadow-lg transition group-hover:opacity-100">{label}</span></span>
+  const triggerRef = useRef<HTMLSpanElement>(null)
+  const tooltipRef = useRef<HTMLSpanElement>(null)
+  const [open, setOpen] = useState(false)
+  const [style, setStyle] = useState<CSSProperties>({})
+
+  useEffect(() => {
+    if (!open) return
+    const updatePosition = () => {
+      const trigger = triggerRef.current
+      const tooltip = tooltipRef.current
+      if (!trigger || !tooltip) return
+      const gap = 8
+      const triggerRect = trigger.getBoundingClientRect()
+      const tooltipRect = tooltip.getBoundingClientRect()
+      const width = tooltipRect.width || 160
+      const height = tooltipRect.height || 32
+      const left = Math.min(
+        Math.max(triggerRect.left + triggerRect.width / 2, gap + width / 2),
+        window.innerWidth - gap - width / 2,
+      )
+      const top = triggerRect.top - height - gap >= gap
+        ? triggerRect.top - height - gap
+        : Math.min(triggerRect.bottom + gap, window.innerHeight - height - gap)
+      setStyle({ left, top })
+    }
+    const frame = window.requestAnimationFrame(updatePosition)
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [open])
+
+  return (
+    <span
+      className="inline-flex"
+      onBlur={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      ref={triggerRef}
+    >
+      {children}
+      {open && (
+        <span
+          className="pointer-events-none fixed z-50 max-w-[min(16rem,calc(100vw-1rem))] -translate-x-1/2 rounded-lg bg-ink px-2.5 py-1.5 text-center text-xs leading-4 text-white shadow-lg"
+          ref={tooltipRef}
+          role="tooltip"
+          style={style}
+        >
+          {label}
+        </span>
+      )}
+    </span>
+  )
 }
 
 export type OverflowMenuItem = {

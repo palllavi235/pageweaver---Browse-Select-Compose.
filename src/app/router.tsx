@@ -10,11 +10,14 @@ const ViewerPage = lazy(() => import('@/pages/viewer-page').then((module) => ({ 
 const ComposerPage = lazy(() => import('@/pages/composer-page').then((module) => ({ default: module.ComposerPage })))
 const SettingsPage = lazy(() => import('@/pages/settings-page').then((module) => ({ default: module.SettingsPage })))
 const AboutPage = lazy(() => import('@/pages/about-page').then((module) => ({ default: module.AboutPage })))
+const LegalPage = lazy(() => import('@/pages/legal-page').then((module) => ({ default: module.LegalPage })))
 const NotFoundPage = lazy(() => import('@/pages/not-found-page').then((module) => ({ default: module.NotFoundPage })))
 
 const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
   { path: '/about', element: <AboutPage /> },
+  { path: '/privacy', element: <LegalPage type="privacy" /> },
+  { path: '/terms', element: <LegalPage type="terms" /> },
   {
     path: '/app',
     element: <AppLayout />,

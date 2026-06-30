@@ -1,10 +1,11 @@
-import { CircleHelp, LogOut, Plus, X } from 'lucide-react'
+import { LogOut, Plus, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
+import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { appNavigation } from '@/constants/navigation'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 import { Brand } from './brand'
-import { Button, IconButton } from './ui'
+import { Button, Dialog, IconButton } from './ui'
 import { cn } from '@/utils/cn'
 import { useAuthStore } from '@/store/use-auth-store'
 import { GoogleAuthButton } from './auth-button'
@@ -15,6 +16,14 @@ function SidebarContent() {
   const createWorkspace = useWorkspaceStore((state) => state.createWorkspace)
   const session = useAuthStore((state) => state.session)
   const signOut = useAuthStore((state) => state.signOut)
+  const [confirmSignOut, setConfirmSignOut] = useState(false)
+
+  const handleSignOut = async () => {
+    await signOut()
+    setConfirmSignOut(false)
+    setSidebarOpen(false)
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-[72px] items-center justify-between px-5">
@@ -36,15 +45,19 @@ function SidebarContent() {
         ))}
       </nav>
       <div className="mt-auto border-t p-3">
-        <NavLink to="/about" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted hover:bg-[#eee7da]"><CircleHelp className="size-[18px]" />About PageWeaver</NavLink>
-        {session ? <>
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted hover:bg-[#eee7da]" onClick={() => void signOut()}><LogOut className="size-[18px]" />Sign out</button>
-          <div className="mt-3 flex items-center gap-3 rounded-xl border bg-surface p-2.5">
-            {session.user.avatarUrl ? <img alt="" className="size-9 rounded-full" src={session.user.avatarUrl} /> : <div className="grid size-9 place-items-center rounded-full bg-leather text-xs font-bold text-white">{session.user.name.slice(0, 2).toUpperCase()}</div>}
-            <div className="min-w-0"><p className="truncate text-sm font-semibold">{session.user.name}</p><p className="truncate text-xs text-muted">{session.user.email}</p></div>
-          </div>
-        </> : <GoogleAuthButton className="mt-3 w-full" compact />}
+        {session ? (
+          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted hover:bg-[#eee7da]" onClick={() => setConfirmSignOut(true)} type="button"><LogOut className="size-[18px]" />Sign out</button>
+        ) : <GoogleAuthButton className="w-full" compact />}
       </div>
+      <Dialog open={confirmSignOut} onClose={() => setConfirmSignOut(false)} title="Sign out?">
+        <p className="text-sm leading-6 text-muted">
+          PageWeaver will disconnect Google Drive for this browser. Local workspace metadata remains on this device.
+        </p>
+        <div className="mt-6 flex justify-end gap-2">
+          <Button onClick={() => setConfirmSignOut(false)} variant="secondary">Cancel</Button>
+          <Button onClick={() => void handleSignOut()} variant="danger"><LogOut className="size-4" /> Sign out</Button>
+        </div>
+      </Dialog>
     </div>
   )
 }

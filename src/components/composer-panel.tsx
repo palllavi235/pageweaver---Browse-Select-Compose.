@@ -38,6 +38,7 @@ import { generateWorkspacePdf } from '@/features/composer/generation-service'
 import { clearPdfCache } from '@/features/pdf/pdf-cache-service'
 import { formatPageRange, parsePageRange } from '@/features/pdf/page-range'
 import { useGenerationStore } from '@/store/use-generation-store'
+import { useAuthStore } from '@/store/use-auth-store'
 import { useWorkspaceStore } from '@/store/use-workspace-store'
 import { createDatedPdfFilename, downloadBlobUrl } from '@/utils/download'
 import { formatBytes, formatGenerationTime } from '@/utils/format'
@@ -113,32 +114,28 @@ function SortableGroup({
           </p>
         </div>
         <div className="flex flex-col">
-          <Tooltip label="Move up">
-            <IconButton
-              aria-label="Move group up"
-              className="size-7"
-              disabled={index === 0}
-              onClick={() => onMove(-1)}
-            >
-              <ArrowUp className="size-3.5" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip label="Move down">
-            <IconButton
-              aria-label="Move group down"
-              className="size-7"
-              disabled={index === groupCount - 1}
-              onClick={() => onMove(1)}
-            >
-              <ArrowDown className="size-3.5" />
-            </IconButton>
-          </Tooltip>
+          <IconButton
+            aria-label="Move group up"
+            className="size-7"
+            disabled={index === 0}
+            onClick={() => onMove(-1)}
+          >
+            <ArrowUp className="size-3.5" />
+          </IconButton>
+          <IconButton
+            aria-label="Move group down"
+            className="size-7"
+            disabled={index === groupCount - 1}
+            onClick={() => onMove(1)}
+          >
+            <ArrowDown className="size-3.5" />
+          </IconButton>
         </div>
       </div>
       <div className="mt-2 flex items-center justify-end border-t pt-1">
-        <Tooltip label="Edit page range"><IconButton aria-label="Edit page range" className="size-8" onClick={onEdit}><Pencil className="size-3.5" /></IconButton></Tooltip>
-        <Tooltip label="Duplicate group"><IconButton aria-label="Duplicate group" className="size-8" onClick={onDuplicate}><Copy className="size-3.5" /></IconButton></Tooltip>
-        <Tooltip label="Remove group"><IconButton aria-label="Remove group" className="size-8 text-danger hover:bg-[#f5e1dd]" onClick={onDelete}><Trash2 className="size-3.5" /></IconButton></Tooltip>
+        <IconButton aria-label="Edit page range" className="size-8" onClick={onEdit}><Pencil className="size-3.5" /></IconButton>
+        <IconButton aria-label="Duplicate group" className="size-8" onClick={onDuplicate}><Copy className="size-3.5" /></IconButton>
+        <IconButton aria-label="Remove group" className="size-8 text-danger hover:bg-[#f5e1dd]" onClick={onDelete}><Trash2 className="size-3.5" /></IconButton>
       </div>
     </div>
   )
@@ -148,6 +145,7 @@ export function ComposerPanel({ embedded = false }: { embedded?: boolean }) {
   const { groups, composerOpen, toggleComposer, reorderGroups, removeGroup, duplicateGroup, updateGroupPages, moveGroup, clearWorkspace, insertGroupAt, activeGroupId, setActiveGroupId, past, future, undo, redo, isDirty, updatedAt, markGenerated, workspaceViewMode, setWorkspaceViewMode } =
     useWorkspaceStore()
   const generation = useGenerationStore()
+  const userId = useAuthStore((state) => state.session?.user.id)
   const addGenerated = useLibraryStore((state) => state.addGenerated)
   const addTimeline = useLibraryStore((state) => state.addTimeline)
   const showToast = useToast()
@@ -239,6 +237,7 @@ export function ComposerPanel({ embedded = false }: { embedded?: boolean }) {
       })
       addGenerated({
         id: historyId,
+        userId,
         filename,
         pageCount: totalPages,
         bytes: bytes.byteLength,
